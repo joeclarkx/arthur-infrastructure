@@ -9,6 +9,11 @@ UMAMI_DIR=/opt/umami
 DB_NAME=umami
 DB_USER=umami
 PORT=3002
+# Comma-separated IPs/CIDRs whose pageviews Umami drops (hasBlockedIp in
+# src/lib/detect.ts). Joe's home IP is dynamic, so treat this as best-effort and
+# rely on the per-browser localStorage opt-out documented in
+# docs/umami-deployment.md as the durable exclusion.
+IGNORE_IP="${IGNORE_IP:-95.89.139.176}"
 
 if ! command -v psql >/dev/null 2>&1; then
     echo "Postgres not found. Installing..."
@@ -49,9 +54,17 @@ if [ ! -f .env ]; then
 DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@localhost:5432/${DB_NAME}
 APP_SECRET=$(openssl rand -hex 32)
 PORT=${PORT}
+IGNORE_IP=${IGNORE_IP}
 EOF
     chmod 600 .env
     echo "Wrote ${UMAMI_DIR}/.env with a generated DB password."
+fi
+
+# Keep IGNORE_IP in sync on an .env that already exists.
+if grep -q '^IGNORE_IP=' .env; then
+    sed -i "s|^IGNORE_IP=.*|IGNORE_IP=${IGNORE_IP}|" .env
+else
+    echo "IGNORE_IP=${IGNORE_IP}" >> .env
 fi
 
 npm install --legacy-peer-deps

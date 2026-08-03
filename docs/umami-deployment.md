@@ -187,6 +187,38 @@ Solutions:
 
 Add sites via Umami web UI → Settings → Websites.
 
+## Excluding Your Own Visits
+
+Umami has no "ignore admin" option — being logged into the dashboard does not
+exclude your own pageviews. Two mechanisms exist, and we use both:
+
+**1. `IGNORE_IP` (server-side, in `/opt/umami/.env`)**
+
+Comma-separated IPs or CIDRs; matching pageviews are dropped on ingest
+(`hasBlockedIp` in `src/lib/detect.ts`). Managed by `scripts/setup.sh`.
+Requires a restart: `systemctl restart umami`.
+
+Home IP is dynamic, so re-check it whenever your own traffic reappears:
+
+```bash
+curl -s https://api.ipify.org          # current IP
+ssh hetzner "grep IGNORE_IP /opt/umami/.env"
+```
+
+**2. localStorage opt-out (per browser, survives IP changes)**
+
+In the browser console on joeclark.photo:
+
+```js
+localStorage.setItem('umami.disabled', 1)
+```
+
+The tracker checks this flag and sends nothing. Repeat per browser/device, and
+note it is cleared if you wipe site data.
+
+Neither removes already-recorded visits — delete those in the Umami UI under the
+website's settings if the history matters.
+
 ## Data Privacy
 
 - Umami does not track personally identifiable information (PII)

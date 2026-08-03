@@ -53,7 +53,10 @@ Umami is live and self-hosted on Arthur at https://umami.joeclark.photo (deploye
 - [ ] Data retention & archival policy
 
 ### Known Issues
-- None yet
+- Own traffic to joeclark.photo shows up in Umami. `IGNORE_IP` added to
+  `scripts/setup.sh` (commit d1f4291) but **not yet deployed**; home IP is
+  dynamic so it needs re-checking periodically. See "Excluding Your Own Visits"
+  in `docs/umami-deployment.md`.
 
 ### Future Considerations
 - CRM API deployment (separate from lead-pipeline)
