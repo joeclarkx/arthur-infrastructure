@@ -54,7 +54,7 @@ EOF
     echo "Wrote ${UMAMI_DIR}/.env with a generated DB password."
 fi
 
-npm install
+npm install --legacy-peer-deps
 npx prisma migrate deploy
 npm run build
 
