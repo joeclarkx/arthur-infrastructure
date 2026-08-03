@@ -1,0 +1,33 @@
+# Credentials & secrets
+credentials/
+.env
+.env.local
+.env.*.local
+
+# Backups
+backups/
+*.sql
+*.sql.gz
+*.dump
+
+# Logs
+logs/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node (if scripts use Node)
+node_modules/
+npm-debug.log
+
+# Temp
+tmp/
+temp/

@@ -1,0 +1,22 @@
+# systemd unit for self-hosted Umami on Arthur.
+# Not installed by any script here — copy to /etc/systemd/system/umami.service,
+# then `systemctl daemon-reload && systemctl enable --now umami`.
+# See docs/plans/umami-self-hosted-analytics.md for the full runbook; this has
+# not been run against the real box.
+
+[Unit]
+Description=Umami analytics
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/umami
+EnvironmentFile=/opt/umami/.env
+ExecStart=/usr/bin/npm run start
+Restart=on-failure
+RestartSec=5
+User=umami
+Group=umami
+
+[Install]
+WantedBy=multi-user.target
