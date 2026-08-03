@@ -8,7 +8,7 @@ set -euo pipefail
 UMAMI_DIR=/opt/umami
 DB_NAME=umami
 DB_USER=umami
-PORT=3001
+PORT=3002
 
 if ! command -v psql >/dev/null 2>&1; then
     echo "Postgres not found. Installing..."
