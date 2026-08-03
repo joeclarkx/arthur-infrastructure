@@ -2,7 +2,7 @@
 
 ## Current Status
 
-Repository initialized. Umami configuration and deployment scripts ported from lead-pipeline repo.
+Umami is live and self-hosted on Arthur at https://umami.joeclark.photo (deployed 2026-08-03). Migrated off Umami Cloud — starting fresh, no historical data carried over.
 
 ## Completed
 
@@ -15,15 +15,24 @@ Repository initialized. Umami configuration and deployment scripts ported from l
 ✅ Copy Umami scripts from lead-pipeline
 ✅ Config templates (.env.example, Apache vhost)
 ✅ .gitignore for credentials and builds
+✅ Deployed self-hosted Umami v2.20.2 to Arthur (Postgres 16, systemd, Apache reverse proxy, Let's Encrypt)
+✅ DNS: `umami.joeclark.photo` A record added by Joe, pointing to 78.47.37.126
+✅ Verified full install flow end-to-end on the real box; fixed drift between setup.sh/docs (port, secret env var names) found in the process
 
 ## To Do
 
+### Immediate (post-install)
+- [ ] Log into https://umami.joeclark.photo (admin/umami) and change the default password immediately
+- [ ] Add joeclark.photo and the CRM frontend as tracked websites in the Umami UI, grab new tracking scripts, deploy them
+- [ ] Cancel/downgrade Umami Cloud subscription once tracking is confirmed working on the new sites
+- [ ] Note for future reference: port 3001 on Arthur is already used by another app (`/var/www/d...`, likely "diary") — Umami runs on 3002 instead
+
 ### Phase 1: Deployment Readiness
-- [ ] Verify setup.sh runs without errors on fresh Ubuntu 22.04
-- [ ] Test full install flow: git clone → setup.sh → service running
-- [ ] Verify Apache vhost config is syntactically correct
-- [ ] Test reverse proxy: curl http://localhost:3000 vs https://umami.joeclark.photo
-- [ ] Document any manual steps still required on Arthur
+- [x] Verify setup.sh runs without errors (fixed npm peer-dep conflict with --legacy-peer-deps, fixed prisma migrate ordering)
+- [x] Test full install flow: git clone → setup.sh → service running
+- [x] Verify Apache vhost config is syntactically correct
+- [x] Test reverse proxy: curl http://localhost:3002 vs https://umami.joeclark.photo
+- [x] Document any manual steps still required on Arthur
 
 ### Phase 2: Operational Automation
 - [ ] Create idempotent deploy script (scripts/umami/deploy.sh)
