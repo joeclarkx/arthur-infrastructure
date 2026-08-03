@@ -16,7 +16,7 @@ Arthur is a single Hetzner CX23 VPS hosting:
 | 80 | HTTP | Apache reverse proxy (redirects to 443) |
 | 443 | HTTPS | Apache (TLS termination, Let's Encrypt) |
 | 8001 | uvicorn | CRM API (localhost only, proxied via Apache) |
-| 3000 | Umami | Application (localhost only, proxied via Apache) |
+| 3001 | Umami | Application (localhost only, proxied via Apache) |
 | 5432 | PostgreSQL | Database (localhost only, no remote access) |
 
 ## Service Architecture
@@ -32,7 +32,7 @@ Arthur is a single Hetzner CX23 VPS hosting:
              │        │
         ┌────▼──┐  ┌──▼────────────┐
         │ CRM   │  │ Umami          │
-        │ (8001)│  │ (3000)         │
+        │ (8001)│  │ (3001)         │
         └────┬──┘  └──┬────────────┘
              │        │
              │    ┌───▼─────────────┐

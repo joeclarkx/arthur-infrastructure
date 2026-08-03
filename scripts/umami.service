@@ -1,8 +1,6 @@
 # systemd unit for self-hosted Umami on Arthur.
-# Not installed by any script here — copy to /etc/systemd/system/umami.service,
-# then `systemctl daemon-reload && systemctl enable --now umami`.
-# See docs/plans/umami-self-hosted-analytics.md for the full runbook; this has
-# not been run against the real box.
+# Installed to /etc/systemd/system/umami.service by the deploy steps in
+# docs/umami-deployment.md; then `systemctl daemon-reload && systemctl enable --now umami`.
 
 [Unit]
 Description=Umami analytics

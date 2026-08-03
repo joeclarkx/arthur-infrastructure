@@ -11,7 +11,7 @@
   ```bash
   ssh hetzner "sudo -u postgres vacuumdb umami && sudo -u postgres reindexdb umami"
   ```
-- Review analytics growth: `ssh hetzner "echo 'SELECT COUNT(*) FROM events;' | psql 'postgresql://umami_user@localhost/umami'"`
+- Review analytics growth: `ssh hetzner "echo 'SELECT COUNT(*) FROM events;' | psql 'postgresql://umami@localhost/umami'"`
 - Check disk space: `ssh hetzner "df -h /"`
 
 ### Monthly
