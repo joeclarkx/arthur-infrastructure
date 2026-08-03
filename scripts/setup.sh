@@ -38,9 +38,13 @@ if [ ! -d "$UMAMI_DIR" ]; then
 fi
 
 cd "$UMAMI_DIR"
-git fetch --tags
-LATEST_TAG=$(git tag -l 'v2.*' | sort -V | tail -1)
-git checkout "$LATEST_TAG"
+# The tree is chowned to umami: at the end of this script, so on re-runs root
+# sees it as "dubious ownership". Pass the exception per-command rather than
+# writing it into root's global gitconfig.
+GIT="git -c safe.directory=${UMAMI_DIR}"
+$GIT fetch --tags
+LATEST_TAG=$($GIT tag -l 'v2.*' | sort -V | tail -1)
+$GIT checkout "$LATEST_TAG"
 
 if [ ! -f .env ]; then
     if [ -n "$DB_PASSWORD_GENERATED" ]; then
