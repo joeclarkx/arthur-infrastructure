@@ -61,8 +61,8 @@ joeclark.photo. See Known Issues.
 
 ### Known Issues
 
-- **BLOCKER (found 2026-09-07): WP Fastest Cache's "Combine JS" swallows the
-  Umami tracker, so it can never report.**
+- **RESOLVED 2026-09-07 (pending confirmation of a live hit): WP Fastest
+  Cache's "Combine JS" swallowed the Umami tracker, so it could never report.**
   Not a stale cache — an initial read of this as staleness was wrong; purging
   the cache does not fix it and pages cached seconds ago reproduce it.
   Mechanism: WPFC concatenates the remote tracker into
@@ -93,6 +93,18 @@ joeclark.photo. See Known Issues.
   page (so the exclude had some effect) but WPFC still comments the tag out on
   every cached response. Bypass paths (POST, any query string) remain ACTIVE,
   so WordPress itself still emits the tag correctly.
+
+  **Resolution.** The inline-loader block was pasted into the theme's custom
+  head content and the cache cleared. Verified 2026-09-07: the loader survives
+  WPFC's pass uncommented on every page sampled (/, /art/, /architecture/,
+  /interiors/, /on-running-berlin/, /50hertz/, /art-fairs/), and no
+  wpfc-minified bundle absorbs the tracker any more. Wire path is clear too —
+  script.js 200 with `Access-Control-Allow-Origin: *`, /api/send preflight 204,
+  no CSP on the site.
+
+  Still to confirm: one real browser hit landing in `website_event`. Joe's own
+  IP is the one `IGNORE_IP` drops, so testing needs a different IP (phone on
+  mobile data, WiFi off). Event count was 20, last 2026-08-17, at time of fix.
 
   **Durable fix — inject the tag from inline JS instead.** WPFC only rewrites
   static `<script src>` tags in the HTML; a script element created at runtime
