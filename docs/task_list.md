@@ -87,6 +87,34 @@ joeclark.photo. See Known Issues.
   `0` means fixed. Then confirm a real hit lands in `website_event`.
   Note: WordPress stamps its cache timestamps in UTC, 2h behind Berlin local.
 
+  **Update 2026-09-07 (later):** the WPFC "Exclude JS → Contains
+  umami.joeclark.photo/script.js" rule did NOT resolve it. After adding the
+  rule and a manual cache clear, the minified JS bundles disappeared from the
+  page (so the exclude had some effect) but WPFC still comments the tag out on
+  every cached response. Bypass paths (POST, any query string) remain ACTIVE,
+  so WordPress itself still emits the tag correctly.
+
+  **Durable fix — inject the tag from inline JS instead.** WPFC only rewrites
+  static `<script src>` tags in the HTML; a script element created at runtime
+  is invisible to its combine/comment pass, so this stops depending on plugin
+  settings entirely. Replace the tag in the theme's custom head content with:
+
+  ```html
+  <script>
+  (function () {
+    var s = document.createElement('script');
+    s.defer = true;
+    s.src = 'https://umami.joeclark.photo/script.js';
+    s.setAttribute('data-website-id', '86e39abc-34e4-4093-8352-ae2e81afbe5f');
+    document.head.appendChild(s);
+  })();
+  </script>
+  ```
+
+  This keeps `data-website-id` on the real script element, so Umami's
+  `document.currentScript` lookup still resolves both the site ID and the
+  `/api/send` origin correctly — the two things the bundled copy destroyed.
+
 - Own traffic to joeclark.photo shows up in Umami. `IGNORE_IP` is **deployed
   and verified working** as of 2026-09-07 (`/opt/umami/.env` =
   `95.89.139.176`, matches the current home IP; a probe from that IP is
