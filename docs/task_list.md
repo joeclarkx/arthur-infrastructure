@@ -61,8 +61,8 @@ joeclark.photo. See Known Issues.
 
 ### Known Issues
 
-- **RESOLVED 2026-09-07 (pending confirmation of a live hit): WP Fastest
-  Cache's "Combine JS" swallowed the Umami tracker, so it could never report.**
+- **RESOLVED & CONFIRMED 2026-09-07: WP Fastest Cache's "Combine JS" swallowed
+  the Umami tracker, so it could never report.**
   Not a stale cache — an initial read of this as staleness was wrong; purging
   the cache does not fix it and pages cached seconds ago reproduce it.
   Mechanism: WPFC concatenates the remote tracker into
@@ -102,9 +102,18 @@ joeclark.photo. See Known Issues.
   script.js 200 with `Access-Control-Allow-Origin: *`, /api/send preflight 204,
   no CSP on the site.
 
-  Still to confirm: one real browser hit landing in `website_event`. Joe's own
-  IP is the one `IGNORE_IP` drops, so testing needs a different IP (phone on
-  mobile data, WiFi off). Event count was 20, last 2026-08-17, at time of fix.
+  **Confirmed working 2026-09-07 09:30 UTC.** A real phone visit (mobile data,
+  IP 176.0.28.121) produced the full chain in the Apache log —
+  `GET /script.js 200`, `OPTIONS /api/send 204`, `POST /api/send 200` — and
+  wrote `website_event` row `/info/` at 09:30:11. Count went 20 -> 21; previous
+  event was 2026-08-17. Tracking is live.
+
+  Incidental finding: a headless-Chrome load from Joe's own IP got
+  `POST /api/send 200` but recorded nothing. That is Umami's bot filter
+  (`isbot(userAgent)` matches "HeadlessChrome" and returns 200 with a decoy
+  body, no row) — not `IGNORE_IP`, which returns 403. So headless browsers
+  cannot be used to smoke-test ingest; use a real browser or a plain POST with
+  a normal UA from an unblocked IP.
 
   **Durable fix — inject the tag from inline JS instead.** WPFC only rewrites
   static `<script src>` tags in the HTML; a script element created at runtime
