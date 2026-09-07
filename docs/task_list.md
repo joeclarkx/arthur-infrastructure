@@ -115,6 +115,18 @@ joeclark.photo. See Known Issues.
   cannot be used to smoke-test ingest; use a real browser or a plain POST with
   a normal UA from an unblocked IP.
 
+  **Blocker undercount (expected, not a bug).** Brave Shields (on by default)
+  and uBlock-style lists block `umami.joeclark.photo/script.js` — a host named
+  `umami.*` serving `/script.js` matches EasyPrivacy patterns, and being a
+  subdomain of the tracked site does not exempt it. A Brave visit from the
+  phone on 2026-09-07 reached Arthur with zero requests; the same phone in
+  Chrome recorded normally. Umami figures will therefore read low against
+  server logs by however large the privacy-conscious share of the audience is.
+  Do not read absolute numbers as ground truth. Serving the tracker from a
+  same-origin path (e.g. `joeclark.photo/stats/script.js`) would defeat
+  list-based blocking, but deliberately overrides a visitor's blocking choice —
+  not done, decision deferred to Joe.
+
   **Durable fix — inject the tag from inline JS instead.** WPFC only rewrites
   static `<script src>` tags in the HTML; a script element created at runtime
   is invisible to its combine/comment pass, so this stops depending on plugin
