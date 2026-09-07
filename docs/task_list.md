@@ -8,7 +8,8 @@ Umami is live and self-hosted on Arthur at https://umami.joeclark.photo (deploye
 days, listening on 3002, Apache proxy OK, cert valid to 2026-11-01, disk 25%,
 memory 1.1/3.7Gi, and a synthetic pageview posted to `/api/send` was accepted
 (200) and written to `website_event`. Ingest is *not* the problem. Last real
-event was 2026-08-17; 20 events total. Cause is client-side — see Known Issues.
+event was 2026-08-17; 20 events total. Cause is client-side: the tracker is never able to report from
+joeclark.photo. See Known Issues.
 
 ## Completed
 
@@ -60,19 +61,31 @@ event was 2026-08-17; 20 events total. Cause is client-side — see Known Issues
 
 ### Known Issues
 
-- **BLOCKER (found 2026-09-07): zero traffic recorded — WP Fastest Cache is
-  serving month-old HTML with the Umami tag commented out.**
-  joeclark.photo (DigitalOcean, 165.22.87.160 — not Arthur) serves cached pages
-  built 2026-08-06..08-11 in which the tracking tag is inside an HTML comment.
-  Freshly-rendered WordPress output has the tag active, so the source is
-  correct; only the cache is stale. Every anonymous visitor gets the cached
-  page and is never tracked.
-  Fix (WP Admin, not Arthur): WP Fastest Cache → Delete Cache → "Delete Cache
-  and Minified CSS/JS", then verify the tag is uncommented on a plain fetch:
+- **BLOCKER (found 2026-09-07): WP Fastest Cache's "Combine JS" swallows the
+  Umami tracker, so it can never report.**
+  Not a stale cache — an initial read of this as staleness was wrong; purging
+  the cache does not fix it and pages cached seconds ago reproduce it.
+  Mechanism: WPFC concatenates the remote tracker into
+  `/wp-content/cache/wpfc-minified/<hash>/e0hrj.js` (the bundle literally
+  contains `// source --> https://umami.joeclark.photo/script.js`) and comments
+  out the original tag. The bundled copy cannot work:
+    1. Umami reads its site ID from `document.currentScript`'s
+       `data-website-id`. The bundle's tag carries only `src` and `type`, and
+       the ID `86e39abc-...` appears **0 times** in the bundle. With no site ID
+       the tracker's own guard suppresses every event.
+    2. The collect URL is derived from `currentScript.src`, so it resolves to
+       `joeclark.photo/wp-content/cache/wpfc-minified/api/send` — wrong origin.
+  Confirmed by request path, independent of any clock: requests that WPFC
+  serves or writes (plain GET, any UA, any cookie) return the commented tag;
+  requests that bypass WPFC (POST, or any query string) return it active.
+  **Fix (WP Admin, not Arthur):** WP Fastest Cache → Settings → Exclude → add a
+  JS exclude rule matching `umami.joeclark.photo/script.js` (or disable
+  Combine JS), then delete the cache. Verify:
   ```
-  curl -s -L https://joeclark.photo/ | grep -o 'umami.joeclark.photo/script.js.\{0,40\}'
+  curl -s -L https://joeclark.photo/ | grep -c '<!-- <script defer src="https://umami'
   ```
-  A trailing `-->` after the tag means the cache is still stale.
+  `0` means fixed. Then confirm a real hit lands in `website_event`.
+  Note: WordPress stamps its cache timestamps in UTC, 2h behind Berlin local.
 
 - Own traffic to joeclark.photo shows up in Umami. `IGNORE_IP` is **deployed
   and verified working** as of 2026-09-07 (`/opt/umami/.env` =
