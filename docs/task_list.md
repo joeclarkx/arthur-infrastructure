@@ -33,6 +33,38 @@ joeclark.photo. See Known Issues.
 - [ ] Add joeclark.photo and the CRM frontend as tracked websites in the Umami UI, grab new tracking scripts, deploy them
 - [ ] Cancel/downgrade Umami Cloud subscription once tracking is confirmed working on the new sites
 - [ ] Note for future reference: port 3001 on Arthur is already used by another app (`/var/www/d...`, likely "diary") — Umami runs on 3002 instead
+- [ ] **Exclude Picu client galleries from tracking** (manual WordPress change,
+  not deployable from this repo). Picu galleries render as WordPress pages under
+  `joeclark.photo/collections/...`, so the theme's custom head content — and
+  with it the Umami inline loader — runs on them. Umami has no server-side path
+  exclusion, so the guard has to be client-side. Replace the loader block in the
+  theme's custom head content with:
+
+  ```html
+  <script>
+  (function () {
+    if (location.pathname.indexOf('/collections/') === 0) return;
+    var s = document.createElement('script');
+    s.defer = true;
+    s.src = 'https://umami.joeclark.photo/script.js';
+    s.setAttribute('data-website-id', '86e39abc-34e4-4093-8352-ae2e81afbe5f');
+    document.head.appendChild(s);
+  })();
+  </script>
+  ```
+
+  Then clear the WPFC cache. Verify by loading a gallery URL and confirming no
+  `GET /script.js` appears in the Apache log.
+
+  Second reason beyond noise: gallery URLs carry `?ident=<token>` (the client's
+  access token) and Umami stores the full query string in
+  `website_event.url_query` — excluding the path keeps those tokens out of the
+  analytics DB.
+
+  Considered and rejected: the tracker's `data-before-send` attribute. It still
+  loads the script and still fires the request; the pathname guard stops it
+  earlier for less code. Only worth it if galleries should be counted but with
+  the query stripped.
 
 ### Phase 1: Deployment Readiness
 - [x] Verify setup.sh runs without errors (fixed npm peer-dep conflict with --legacy-peer-deps, fixed prisma migrate ordering)
