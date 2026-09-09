@@ -33,12 +33,20 @@ joeclark.photo. See Known Issues.
 - [ ] Add joeclark.photo and the CRM frontend as tracked websites in the Umami UI, grab new tracking scripts, deploy them
 - [ ] Cancel/downgrade Umami Cloud subscription once tracking is confirmed working on the new sites
 - [ ] Note for future reference: port 3001 on Arthur is already used by another app (`/var/www/d...`, likely "diary") — Umami runs on 3002 instead
-- [ ] **Exclude Picu client galleries from tracking** (manual WordPress change,
-  not deployable from this repo). Picu galleries render as WordPress pages under
-  `joeclark.photo/collections/...`, so the theme's custom head content — and
-  with it the Umami inline loader — runs on them. Umami has no server-side path
-  exclusion, so the guard has to be client-side. Replace the loader block in the
-  theme's custom head content with:
+- [x] **Exclude Picu client galleries from tracking** — guard pasted and live
+  2026-09-09, but see the correction below: it was never needed. Picu galleries
+  do **not** use the theme's custom head content. A fetch of
+  `/collections/bc4607c2af6bab40/` returned zero occurrences of "umami": Picu
+  renders its own standalone template (`picu-header`, its own bundled
+  jQuery/Backbone/Underscore), bypassing the theme header entirely. So
+  `/collections/` was never tracked and gallery `?ident` tokens never reached
+  `website_event.url_query`. The guard is kept as insurance in case Picu ever
+  switches to a theme-wrapped template. Not confirmed against the DB — the
+  `SELECT url_path, count(*) FROM website_event` check was blocked by the local
+  permission classifier, so the evidence is HTML-only.
+
+  Umami has no server-side path exclusion, so any such guard has to be
+  client-side. The loader block in the theme's custom head content now reads:
 
   ```html
   <script>
@@ -53,13 +61,12 @@ joeclark.photo. See Known Issues.
   </script>
   ```
 
-  Then clear the WPFC cache. Verify by loading a gallery URL and confirming no
-  `GET /script.js` appears in the Apache log.
-
-  Second reason beyond noise: gallery URLs carry `?ident=<token>` (the client's
-  access token) and Umami stores the full query string in
-  `website_event.url_query` — excluding the path keeps those tokens out of the
-  analytics DB.
+  **WPFC cache lag observed 2026-09-09.** After pasting, the plain homepage
+  still served the *old* unguarded loader — the cached file dated "September 7,
+  2026 @ 9:29 am". Only a cache-busted request (`/?ponytailcachebust=1`, query
+  strings skip WPFC) showed the new block. Any head-content edit needs a WPFC
+  cache clear before it reaches visitors, and cache-busting with a query string
+  is the quick way to check what WordPress is actually rendering.
 
   Considered and rejected: the tracker's `data-before-send` attribute. It still
   loads the script and still fires the request; the pathname guard stops it
