@@ -34,19 +34,11 @@ joeclark.photo. See Known Issues.
 - [ ] Cancel/downgrade Umami Cloud subscription once tracking is confirmed working on the new sites
 - [ ] Note for future reference: port 3001 on Arthur is already used by another app (`/var/www/d...`, likely "diary") — Umami runs on 3002 instead
 - [x] **Exclude Picu client galleries from tracking** — guard pasted and live
-  2026-09-09, but see the correction below: it was never needed. Picu galleries
-  do **not** use the theme's custom head content. A fetch of
-  `/collections/bc4607c2af6bab40/` returned zero occurrences of "umami": Picu
-  renders its own standalone template (`picu-header`, its own bundled
-  jQuery/Backbone/Underscore), bypassing the theme header entirely. So
-  `/collections/` was never tracked and gallery `?ident` tokens never reached
-  `website_event.url_query`. The guard is kept as insurance in case Picu ever
-  switches to a theme-wrapped template. Not confirmed against the DB — the
-  `SELECT url_path, count(*) FROM website_event` check was blocked by the local
-  permission classifier, so the evidence is HTML-only.
-
-  Umami has no server-side path exclusion, so any such guard has to be
-  client-side. The loader block in the theme's custom head content now reads:
+  2026-09-09. Galleries **were** being tracked: the Umami dashboard shows a
+  `/collections/bc4607c2af6bab40/` pageview recorded earlier on 2026-09-09,
+  before the guard was pasted. Umami has no server-side path exclusion, so the
+  guard has to be client-side. The loader block in the theme's custom head
+  content now reads:
 
   ```html
   <script>
@@ -67,6 +59,25 @@ joeclark.photo. See Known Issues.
   strings skip WPFC) showed the new block. Any head-content edit needs a WPFC
   cache clear before it reaches visitors, and cache-busting with a query string
   is the quick way to check what WordPress is actually rendering.
+
+  Second reason beyond noise: gallery URLs carry `?ident=<token>` (the client's
+  access token) and Umami stores the full query string in
+  `website_event.url_query` — excluding the path keeps those tokens out of the
+  analytics DB. Existing pre-guard rows may already hold one; worth checking and
+  deleting if so.
+
+  **Unexplained, left open.** Which template fires the tracker is not pinned
+  down. Anonymous fetches on 2026-09-09 showed: the ident URL renders Picu's
+  standalone template (`picu-header`, its own bundled jQuery/Backbone) with zero
+  "umami" in the HTML; the same URL without `?ident` 302-redirects to the ident
+  URL; `/collections/` 404s into the *theme* template, which does carry the
+  tracker. None of those paths obviously produces a recorded `url_path` of
+  `/collections/<id>/`. Likely the template differs in a state the anonymous
+  fetch did not reach — logged-in admin bar, a collection in draft/preview, or a
+  different collection status. Does not block the fix: the guard keys on
+  `location.pathname`, so it covers every `/collections/*` route regardless of
+  which template renders. Only worth chasing if rows keep appearing after the
+  WPFC cache is cleared.
 
   Considered and rejected: the tracker's `data-before-send` attribute. It still
   loads the script and still fires the request; the pathname guard stops it
