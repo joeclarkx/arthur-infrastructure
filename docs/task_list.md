@@ -58,6 +58,13 @@ Umami is live and self-hosted on Arthur at https://umami.joeclark.photo (deploye
   dynamic so it needs re-checking periodically. See "Excluding Your Own Visits"
   in `docs/umami-deployment.md`.
 
+### Under Consideration: Minecraft Bedrock server for Casper
+Investigated 2026-10-03. Arthur has the room (4GB RAM; Bedrock server needs ~0.5-1GB for a few players) if capped via systemd (CPUQuota/MemoryMax) so it can't starve crm-api/Umami.
+- Casper plays on iPad (can add a custom server directly); friends may be on Switch, which has no "add server" option and needs a BedrockConnect DNS change on each console
+- Alternative: Minecraft Realm (£3.29/month for 2 friends, £6.69 Realms Plus for 10), works on Switch with no setup
+- [ ] Decision pending from Joe: self-host on Arthur vs Realm
+- If self-hosting: scripts/minecraft/ (install, capped systemd unit, auto-update + world backup timer), UFW allow 19132-19133/udp, allow-list of friends' gamertags, docs/minecraft.md
+
 ### Future Considerations
 - CRM API deployment (separate from lead-pipeline)
 - Centralized logging (ELK or similar)

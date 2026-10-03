@@ -71,7 +71,7 @@ ssh hetzner "echo 'SELECT pg_size_pretty(pg_database_size(''umami''));' | psql -
 
 ### Server Resources
 
-Current: **2GB RAM, 40GB SSD**
+Current: **CX23, 2 shared vCPU, 4GB RAM, 40GB SSD**
 
 Monitor:
 ```bash
@@ -80,7 +80,7 @@ ssh hetzner "free -h && df -h / && ps aux --sort=-%mem | head -10"
 
 If consistently >80% RAM or disk:
 - Archive event data older than 1 year
-- Migrate to CX31 instance (4GB RAM, 80GB SSD)
+- Migrate to CX33 instance (4 vCPU, 8GB RAM, 80GB SSD)
 - Implement caching layer (Redis)
 
 ## Troubleshooting

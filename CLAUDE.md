@@ -6,7 +6,7 @@ Infrastructure and services running on Arthur (Hetzner VPS CX23, 78.47.37.126).
 
 **Host:** Arthur (Hetzner)  
 **IP:** 78.47.37.126  
-**OS:** Linux (CX23, 2GB RAM, 40GB SSD)  
+**OS:** Linux (CX23, 2 shared vCPU, 4GB RAM, 40GB SSD)  
 **SSH:** `ssh hetzner` (configured in ~/.ssh/config)
 
 ### Users & Permissions

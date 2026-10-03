@@ -75,11 +75,12 @@ Arthur is a single Hetzner CX23 VPS hosting:
 
 ## Resource Limits
 
-- **RAM:** 2GB total
-  - Apache + services: ~600MB
-  - PostgreSQL: ~500MB
-  - Umami + uvicorn: ~600MB
-  - Headroom: ~300MB
+- **CPU:** 2 shared vCPU
+- **RAM:** 4GB total (confirmed by Joe 2026-10-03; earlier docs wrongly said 2GB)
+  - Apache + services: ~600MB (estimate)
+  - PostgreSQL: ~500MB (estimate)
+  - Umami + uvicorn: ~600MB (estimate)
+  - Headroom: ~2.3GB
 
 Monitor via `free -h` on server. If approaching limit, consider:
 - Database optimization
