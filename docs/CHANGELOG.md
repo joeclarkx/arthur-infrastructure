@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-10-27: Multi Gmail MCP deployed to Arthur
+
+Self-hosted [multi-gmail-cowork-mcp](https://github.com/reconexus/multi-gmail-cowork-mcp)
+at `https://mail.mcp.joeclark.photo`, instead of Google Cloud Run. Runbook: `docs/multi-gmail-mcp.md`.
+
+- systemd unit `multi-gmail-mcp` (user `mgmail`, sandboxed) on port 3003, behind Apache with Let's Encrypt
+- Node 22.23.4 in `/opt/node-22` for this service only; system Node 18 untouched
+- Upstream pinned at `5d3fcd8` plus `deploy/multi-gmail-mcp/file-store.patch` (file token store in production, atomic mode-600 writes)
+- Tokens in `/var/lib/multi-gmail-mcp/.local/`, secrets in `/etc/multi-gmail-mcp.env` (root, 600, not in git)
+- DNS: `*.mcp.joeclark.photo` A record to `78.47.37.126` (Namecheap), so later MCP servers need no DNS change
+- Admin and consent pages are public behind a 64-character random password (no IP allow-list: home IP can change)
+- Verified: smoke test made no outbound connections; port 3003 blocked by ufw from outside
+
 ## 2026-08-03 — Self-hosted Umami deployed to Arthur
 
 Migrated off Umami Cloud to a self-hosted instance at `https://umami.joeclark.photo`.

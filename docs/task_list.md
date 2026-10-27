@@ -84,6 +84,14 @@ joeclark.photo. See Known Issues.
   earlier for less code. Only worth it if galleries should be counted but with
   the query stripped.
 
+### Multi Gmail MCP (deployed 2026-10-27, see docs/multi-gmail-mcp.md)
+- [x] Deploy to https://mail.mcp.joeclark.photo (systemd, Apache, certbot)
+- [x] Google Cloud project `multi-gmail-mcp`: Gmail API, OAuth client, redirect URI
+- [ ] Confirm Google Auth Platform branding saved and app published (In production), else refresh tokens die after 7 days
+- [ ] Connect Gmail accounts at /admin and the Claude connector
+- [ ] Run acceptance test with SKIP_SEND=1 (list, search both, draft), then restart and repeat to prove tokens persist
+- [ ] Back up `/var/lib/multi-gmail-mcp` after accounts are connected
+
 ### Phase 1: Deployment Readiness
 - [x] Verify setup.sh runs without errors (fixed npm peer-dep conflict with --legacy-peer-deps, fixed prisma migrate ordering)
 - [x] Test full install flow: git clone → setup.sh → service running
