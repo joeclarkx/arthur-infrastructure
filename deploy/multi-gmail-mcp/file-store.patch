@@ -1,0 +1,66 @@
+diff --git a/src/accountStore.ts b/src/accountStore.ts
+index 6a84267..3c06bb0 100644
+--- a/src/accountStore.ts
++++ b/src/accountStore.ts
+@@ -1,5 +1,5 @@
+ import { SecretManagerServiceClient } from '@google-cloud/secret-manager';
+-import { mkdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
++import { mkdirSync, existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+ import { dirname, join } from 'node:path';
+ import { loadConfig } from './config.js';
+ import { log } from './logger.js';
+@@ -153,8 +153,10 @@ class FileAccountStore implements AccountStore {
+   }
+ 
+   private writeAll(accounts: AccountRecord[]): void {
+-    mkdirSync(dirname(this.filePath), { recursive: true });
+-    writeFileSync(this.filePath, JSON.stringify(accounts, null, 2), 'utf8');
++    mkdirSync(dirname(this.filePath), { recursive: true, mode: 0o700 });
++    // Write then rename, so a crash or full disk can never leave a truncated file.
++    writeFileSync(`${this.filePath}.tmp`, JSON.stringify(accounts, null, 2), { encoding: 'utf8', mode: 0o600 });
++    renameSync(`${this.filePath}.tmp`, this.filePath);
+   }
+ 
+   async list(): Promise<AccountRecord[]> {
+diff --git a/src/config.ts b/src/config.ts
+index a40e923..c6ecc0c 100644
+--- a/src/config.ts
++++ b/src/config.ts
+@@ -42,8 +42,10 @@ export function loadConfig(): Config {
+   if (tokenStore !== 'secret-manager' && tokenStore !== 'file') {
+     throw new Error(`TOKEN_STORE must be "secret-manager" or "file", got: ${tokenStore}`);
+   }
+-  if (tokenStore === 'file' && process.env.NODE_ENV === 'production') {
+-    throw new Error('TOKEN_STORE=file is not allowed when NODE_ENV=production. Use secret-manager.');
++  if (tokenStore === 'file' && process.env.NODE_ENV === 'production' && process.env.ALLOW_FILE_TOKEN_STORE !== 'true') {
++    throw new Error(
++      'TOKEN_STORE=file is not allowed when NODE_ENV=production. Use secret-manager, or set ALLOW_FILE_TOKEN_STORE=true on a single-host deployment.',
++    );
+   }
+ 
+   const logLevel = optional('LOG_LEVEL', 'info');
+diff --git a/src/mcpOAuth.ts b/src/mcpOAuth.ts
+index 0b7fae9..50dc031 100644
+--- a/src/mcpOAuth.ts
++++ b/src/mcpOAuth.ts
+@@ -1,6 +1,6 @@
+ import { SecretManagerServiceClient } from '@google-cloud/secret-manager';
+ import { createHash, createHmac, randomBytes } from 'node:crypto';
+-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
++import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+ import { dirname, join } from 'node:path';
+ import type { Response } from 'express';
+ import {
+@@ -141,8 +141,10 @@ class OAuthStateStore {
+     const config = loadConfig();
+     const payload = JSON.stringify(state);
+     if (config.tokenStore === 'file') {
+-      mkdirSync(dirname(this.filePath), { recursive: true });
+-      writeFileSync(this.filePath, payload, 'utf8');
++      mkdirSync(dirname(this.filePath), { recursive: true, mode: 0o700 });
++      // Write then rename, so a crash or full disk can never leave a truncated file.
++      writeFileSync(`${this.filePath}.tmp`, payload, { encoding: 'utf8', mode: 0o600 });
++      renameSync(`${this.filePath}.tmp`, this.filePath);
+       return;
+     }
+ 

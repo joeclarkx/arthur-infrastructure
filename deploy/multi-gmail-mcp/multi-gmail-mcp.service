@@ -1,0 +1,39 @@
+# systemd unit for multi-gmail-cowork-mcp on Arthur.
+# Installed to /etc/systemd/system/ by deploy.sh. Token files live in
+# /var/lib/multi-gmail-mcp/.local/ (the app writes to <cwd>/.local).
+
+[Unit]
+Description=Multi Gmail MCP server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=mgmail
+Group=mgmail
+EnvironmentFile=/etc/multi-gmail-mcp.env
+StateDirectory=multi-gmail-mcp
+StateDirectoryMode=0700
+WorkingDirectory=/var/lib/multi-gmail-mcp
+ExecStart=/opt/node-22/bin/node /opt/multi-gmail-mcp/app/dist/index.js
+Restart=on-failure
+RestartSec=5
+UMask=0077
+MemoryMax=256M
+
+# Sandbox: read-only system, no home dirs, no privilege gain.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictSUIDSGID=true
+LockPersonality=true
+CapabilityBoundingSet=
+
+[Install]
+WantedBy=multi-user.target
