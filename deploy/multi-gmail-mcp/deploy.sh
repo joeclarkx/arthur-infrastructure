@@ -29,12 +29,12 @@ export PATH="$NODE_DIR/bin:$PATH"
 
 id mgmail >/dev/null 2>&1 || useradd --system --no-create-home --shell /usr/sbin/nologin mgmail
 
-# Upstream at the pinned commit plus our patch. Owned by root, read-only to the service.
+# Upstream at the pinned commit plus our patches, in order. Owned by root, read-only to the service.
 [ -d "$APP/.git" ] || git clone --quiet "$UPSTREAM" "$APP"
 git -C "$APP" fetch --quiet origin
 git -C "$APP" reset --quiet --hard "$COMMIT"
 git -C "$APP" clean -fdq
-git -C "$APP" apply "$HERE/file-store.patch"
+for patch in "$HERE"/[0-9][0-9]-*.patch; do git -C "$APP" apply "$patch"; done
 (cd "$APP" && npm ci --ignore-scripts --no-audit --no-fund --loglevel=error && npm run --silent build && npm prune --omit=dev --no-audit --no-fund --loglevel=error)
 
 # Secrets: created once, never overwritten, never printed.

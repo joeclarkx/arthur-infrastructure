@@ -19,7 +19,8 @@ ExecStart=/opt/node-22/bin/node /opt/multi-gmail-mcp/app/dist/index.js
 Restart=on-failure
 RestartSec=5
 UMask=0077
-MemoryMax=256M
+# get_attachment holds a 25 MB file several times over (base64, JSON) while encoding.
+MemoryMax=512M
 
 # Sandbox: read-only system, no home dirs, no privilege gain.
 NoNewPrivileges=true

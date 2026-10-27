@@ -16,15 +16,38 @@ with its token files on local disk.
 
 | Path | What |
 |---|---|
-| `/opt/multi-gmail-mcp/app` | Upstream checkout at the commit pinned in `deploy.sh`, plus `file-store.patch` |
+| `/opt/multi-gmail-mcp/app` | Upstream checkout at the commit pinned in `deploy.sh`, plus our patches |
 | `/etc/multi-gmail-mcp.env` | Secrets (root, mode 600). Not in git. |
 | `/var/lib/multi-gmail-mcp/.local/accounts.json` | Gmail refresh tokens, plain text, mode 600 |
 | `/var/lib/multi-gmail-mcp/.local/mcp-oauth-state.json` | Claude connector registrations and hashed refresh tokens |
 
-The patch (`deploy/multi-gmail-mcp/file-store.patch`) does two things: allows the
-file token store in production when `ALLOW_FILE_TOKEN_STORE=true`, and writes token
-files atomically (temp file then rename, mode 600) so a crash or full disk cannot
-truncate them. Small enough to offer upstream.
+Patches in `deploy/multi-gmail-mcp/`, applied in number order by `deploy.sh`:
+
+- `01-file-store.patch`: allows the file token store in production when
+  `ALLOW_FILE_TOKEN_STORE=true`, and writes token files atomically (temp file then
+  rename, mode 600) so a crash or full disk cannot truncate them.
+- `02-get-attachment.patch` (for bookkeeping):
+  - `get_email` gains `body: none | text | html | both` (default `both`, as upstream)
+    and returns a `partId` for each attachment.
+  - New read-only tool `get_attachment`: `account`, `message_id`, `part_id` or exact
+    `filename`, `max_bytes` (default 10 MB, maximum 25 MB). Returns `filename`
+    (sanitised), `original_filename`, `mimeType`, `size`, `sha256` and `data_base64`,
+    or metadata with `truncated: true` if too large. Nothing is written to disk.
+  - MIME allowlist: PDF, PNG, JPEG, `text/calendar`, `text/plain` (Deutsche Bahn sends
+    `.ics` files as plain text), `application/octet-stream` (DB and bahn.de PDFs) and
+    every Office Open XML type.
+  - Selection is by `partId`, not Gmail's `attachmentId`: the latter changes on every
+    fetch, so it cannot identify an attachment between two calls.
+  - Each call logs alias, message id, part id, type and size. It does not log
+    filenames, in line with upstream's rule of never logging content.
+
+Both are small enough to offer upstream. After an upstream update, rerun the
+attachment check (it reads three Deutsche Bahn mails in `conni-personal` and prints
+metadata only):
+
+```bash
+ssh hetzner "bash /opt/arthur-infrastructure/deploy/multi-gmail-mcp/check-attachments.sh"
+```
 
 Tokens are not encrypted at rest. The key would have to live in the env file on the
 same disk, so it would not stop anyone who can already read `/var/lib`. Protection is
@@ -38,7 +61,7 @@ ssh hetzner "cd /opt/arthur-infrastructure && git pull origin main && bash deplo
 
 To pick up a new upstream version: read the upstream changes, set `COMMIT` in
 `deploy/multi-gmail-mcp/deploy.sh` to the new commit, commit, push, deploy. If
-`git apply` fails, upstream has touched the patched lines: regenerate the patch
+`git apply` fails, upstream has touched the patched lines: regenerate that patch
 against the new commit. Connected accounts and the Claude connector survive updates.
 
 ## First-time setup

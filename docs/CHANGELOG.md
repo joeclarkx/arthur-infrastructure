@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-10-27: Multi Gmail MCP gains get_attachment
+
+For the Studio Cornelia Baltes bookkeeping. New `deploy/multi-gmail-mcp/02-get-attachment.patch`:
+`get_email` gets a `body` parameter and per-attachment `partId`; new read-only tool
+`get_attachment` returns one attachment as base64 with sha256. `MemoryMax` raised to
+512M for 25 MB attachments. `file-store.patch` renamed `01-file-store.patch`.
+
+- Selects by `partId`: Gmail's `attachmentId` was confirmed to change on every fetch
+- `text/plain` added to the handoff's MIME allowlist, because DB sends `.ics` files as it
+- Verified with `check-attachments.sh`: all three handoff test messages, sizes exact, sha256 stable
+
 ## 2026-10-27: Multi Gmail MCP deployed to Arthur
 
 Self-hosted [multi-gmail-cowork-mcp](https://github.com/reconexus/multi-gmail-cowork-mcp)

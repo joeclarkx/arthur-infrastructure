@@ -88,9 +88,11 @@ joeclark.photo. See Known Issues.
 - [x] Deploy to https://mail.mcp.joeclark.photo (systemd, Apache, certbot)
 - [x] Google Cloud project `multi-gmail-mcp`: Gmail API, OAuth client, redirect URI
 - [ ] Confirm Google Auth Platform branding saved and app published (In production), else refresh tokens die after 7 days
-- [ ] Connect Gmail accounts at /admin and the Claude connector
+- [x] Connect Gmail accounts at /admin (joe-personal, conni-personal, conni-work) and the Claude connector
 - [ ] Run acceptance test with SKIP_SEND=1 (list, search both, draft), then restart and repeat to prove tokens persist
 - [ ] Back up `/var/lib/multi-gmail-mcp` after accounts are connected
+- [x] `get_attachment` tool and `get_email` body parameter (02-get-attachment.patch), verified on the three DB test mails
+- [ ] Not done from the attachment handoff (optional): per-account switch to disable `send_email`/`create_draft`
 
 ### Phase 1: Deployment Readiness
 - [x] Verify setup.sh runs without errors (fixed npm peer-dep conflict with --legacy-peer-deps, fixed prisma migrate ordering)
