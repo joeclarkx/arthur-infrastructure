@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-30: Multi Gmail MCP allows application/ics
+
+Gmail labels many `.ics` files `application/ics`; `get_attachment` and `get_attachment_link`
+rejected them despite promising calendar files. Added `application/ics` and `application/x-ics`
+to the allowlist in `02-get-attachment.patch`. Verified: `check-attachments.sh` all passed with a
+new case (Rembrandt House ticket, joe-personal `1a15a6a611bcbcdb`), and the live connector returns it.
+
 ## 2026-10-30: Multi Gmail MCP gains get_attachment_link
 
 From the save_attachment handoff, adapted because the server runs on Arthur, not the Mac.
