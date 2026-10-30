@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-10-30: Multi Gmail MCP gains get_attachment_link
+
+From the save_attachment handoff, adapted because the server runs on Arthur, not the Mac.
+New `deploy/multi-gmail-mcp/03-attachment-link.patch`: tool `get_attachment_link` returns
+filename, size, sha256 and a signed 1-hour download URL (`/attachments/<token>/<name>`)
+instead of base64. Stateless; nothing is written on Arthur.
+
+- Verified: `check-attachments.sh` all passed (link download sha256 matches, bad signature 403)
+- Acceptance: `Baltes_APT Global_180226.pdf` (conni-personal, `161d25c446321943`) downloaded
+  over the public URL to `~/Downloads`, 192678 bytes, `%PDF-`; flipped signature and
+  swapped payload both 403
+- Skipped from the handoff: named save roots, `list_save_roots`, `save_all_attachments`
+
 ## 2026-10-27: Multi Gmail MCP gains get_attachment
 
 For the Studio Cornelia Baltes bookkeeping. New `deploy/multi-gmail-mcp/02-get-attachment.patch`:
