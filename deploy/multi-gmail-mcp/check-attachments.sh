@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Regression check for get_email(body), get_attachment and get_attachment_link against real messages in
-# conni-personal. Prints metadata and PASS/FAIL only, never file contents. Run as root:
+# conni-personal (plus one in joe-personal). Prints metadata and PASS/FAIL only, never file contents. Run as root:
 #   ssh hetzner "bash /opt/arthur-infrastructure/deploy/multi-gmail-mcp/check-attachments.sh [dist-dir]"
 set -euo pipefail
 DIST="${1:-/opt/multi-gmail-mcp/app/dist}"
@@ -51,6 +51,15 @@ try {
   check(false, 'unknown part_id is rejected');
 } catch (err) {
   check(err instanceof AttachmentSelectionError, 'unknown part_id is rejected');
+}
+
+// Gmail labels many .ics files application/ics (Rembrandt House ticket, joe-personal).
+try {
+  const joe = (await getAccountStore().get('joe-personal')).refreshToken;
+  const ics = await getAttachment(joe, '1a15a6a611bcbcdb', { partId: '2' }, MB);
+  check(ics.mimeType === 'application/ics' && Buffer.from(ics.data_base64, 'base64').toString('latin1').includes('BEGIN:VCALENDAR'), 'application/ics attachment is allowed');
+} catch (err) {
+  check(false, `application/ics attachment is allowed: ${err.message}`);
 }
 
 // get_attachment_link: tokens verify, tampering fails, and the live endpoint serves the same bytes.

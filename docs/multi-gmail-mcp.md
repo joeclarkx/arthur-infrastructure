@@ -33,7 +33,8 @@ Patches in `deploy/multi-gmail-mcp/`, applied in number order by `deploy.sh`:
     `filename`, `max_bytes` (default 10 MB, maximum 25 MB). Returns `filename`
     (sanitised), `original_filename`, `mimeType`, `size`, `sha256` and `data_base64`,
     or metadata with `truncated: true` if too large. Nothing is written to disk.
-  - MIME allowlist: PDF, PNG, JPEG, `text/calendar`, `text/plain` (Deutsche Bahn sends
+  - MIME allowlist: PDF, PNG, JPEG, `text/calendar`, `application/ics`, `application/x-ics`
+    (Gmail labels many `.ics` files so), `text/plain` (Deutsche Bahn sends
     `.ics` files as plain text), `application/octet-stream` (DB and bahn.de PDFs) and
     every Office Open XML type.
   - Selection is by `partId`, not Gmail's `attachmentId`: the latter changes on every
