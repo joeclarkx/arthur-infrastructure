@@ -40,10 +40,25 @@ Patches in `deploy/multi-gmail-mcp/`, applied in number order by `deploy.sh`:
     fetch, so it cannot identify an attachment between two calls.
   - Each call logs alias, message id, part id, type and size. It does not log
     filenames, in line with upstream's rule of never logging content.
+- `03-attachment-link.patch`: tool `get_attachment_link`, for saving files without
+  the bytes passing through Claude (base64 through the model is too expensive past
+  a few KB). Same selection, allowlist and 25 MB cap as `get_attachment`; returns
+  `filename`, `size`, `sha256`, `download_url` and `expires_at`, no content.
+  - `download_url` is `/attachments/<token>/<filename>`. The token is the alias,
+    message id, part id and an expiry, signed with HMAC-SHA256 under
+    `OAUTH_STATE_SECRET`. The link is the auth (no login), so it lives for 1 hour.
+    Rotating `OAUTH_STATE_SECRET` kills all outstanding links.
+  - Stateless: each download re-fetches from Gmail and is served with
+    `Content-Disposition: attachment`. Nothing is written on Arthur.
+  - Use: in claude.ai, click the link and the file lands in `~/Downloads`; move it from
+    there. In Claude Code, `curl -fsSL -o <path> <download_url>` saves it anywhere.
+  - Not done from the save_attachment handoff: named save roots, `save_all_attachments`,
+    `list_save_roots`. The server runs on Arthur, so its disk is not the Mac's;
+    direct-to-Drive saving would need a sync folder (Syncthing) or the Drive API.
 
-Both are small enough to offer upstream. After an upstream update, rerun the
-attachment check (it reads three Deutsche Bahn mails in `conni-personal` and prints
-metadata only):
+All three are small enough to offer upstream. After an upstream update, rerun the
+attachment check (it reads three Deutsche Bahn mails in `conni-personal`, downloads one
+through a link, and prints metadata only):
 
 ```bash
 ssh hetzner "bash /opt/arthur-infrastructure/deploy/multi-gmail-mcp/check-attachments.sh"

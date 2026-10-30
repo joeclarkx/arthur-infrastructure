@@ -1,0 +1,189 @@
+diff --git a/src/attachmentLinks.ts b/src/attachmentLinks.ts
+new file mode 100644
+index 0000000..bf770dd
+--- /dev/null
++++ b/src/attachmentLinks.ts
+@@ -0,0 +1,75 @@
++import { createHmac } from 'node:crypto';
++import { Router } from 'express';
++import { getAccountStore } from './accountStore.js';
++import { loadConfig } from './config.js';
++import { getAttachment } from './gmail.js';
++import { log } from './logger.js';
++import { safeEqual } from './safeCompare.js';
++
++/** How long a download link works. A new one is a single tool call away. */
++export const LINK_TTL_SECONDS = 60 * 60;
++const MAX_BYTES = 25 * 1024 * 1024;
++
++interface LinkPayload {
++  a: string; // account alias
++  m: string; // message id
++  p: string; // part id
++  e: number; // expiry, unix seconds
++}
++
++function sign(payload: string): string {
++  // Domain-separated from the OAuth state signatures that share this secret.
++  return createHmac('sha256', loadConfig().oauthStateSecret).update(`attachment-link:${payload}`).digest('base64url');
++}
++
++/**
++ * Signed, expiring URL that streams one attachment straight from Gmail. Stateless:
++ * nothing is stored on this server, and the bytes never pass through the model.
++ */
++export function attachmentLink(alias: string, messageId: string, partId: string, filename: string) {
++  const expires = Math.floor(Date.now() / 1000) + LINK_TTL_SECONDS;
++  const payload = Buffer.from(JSON.stringify({ a: alias, m: messageId, p: partId, e: expires })).toString('base64url');
++  return {
++    url: `${loadConfig().publicBaseUrl}/attachments/${payload}.${sign(payload)}/${encodeURIComponent(filename)}`,
++    expires_at: new Date(expires * 1000).toISOString(),
++  };
++}
++
++export function verifyToken(token: string): LinkPayload | undefined {
++  const [payload, sig, extra] = token.split('.');
++  if (!payload || !sig || extra !== undefined || !safeEqual(sig, sign(payload))) return undefined;
++  const data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as LinkPayload;
++  return data.e > Date.now() / 1000 ? data : undefined;
++}
++
++export function createAttachmentRouter(): Router {
++  const router = Router();
++  router.get('/:token/:name', async (req, res) => {
++    const link = verifyToken(req.params.token);
++    if (!link) {
++      res.status(403).type('text').send('Link invalid or expired. Ask Claude for a new one.');
++      return;
++    }
++    // Express 4 does not catch async errors, so everything that can throw stays in here.
++    try {
++      const record = await getAccountStore().get(link.a);
++      if (!record) {
++        res.status(404).type('text').send('Account no longer connected.');
++        return;
++      }
++      const att = await getAttachment(record.refreshToken, link.m, { partId: link.p }, MAX_BYTES);
++      if (att.truncated || !att.data_base64) {
++        res.status(413).type('text').send('Attachment too large.');
++        return;
++      }
++      log.info('attachment_download', { account: link.a, messageId: link.m, partId: link.p, size: att.size, sha256: att.sha256 });
++      res.setHeader('X-Content-Type-Options', 'nosniff');
++      res.setHeader('Cache-Control', 'no-store');
++      res.attachment(att.filename).type(att.mimeType).send(Buffer.from(att.data_base64, 'base64'));
++    } catch (err) {
++      log.error('attachment_download_failed', { account: link.a, message: (err as Error).message });
++      res.status(502).type('text').send('Fetching the attachment from Gmail failed.');
++    }
++  });
++  return router;
++}
+diff --git a/src/index.ts b/src/index.ts
+index 2eb3429..516b633 100644
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -4,6 +4,7 @@ import express from 'express';
+ import { createOAuthMetadata, mcpAuthMetadataRouter, mcpAuthRouter } from '@modelcontextprotocol/sdk/server/auth/router.js';
+ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+ import { createAdminRouter } from './adminRouter.js';
++import { createAttachmentRouter } from './attachmentLinks.js';
+ import { loadConfig } from './config.js';
+ import { log } from './logger.js';
+ import { mcpOAuthAuth } from './mcpAuth.js';
+@@ -45,6 +46,9 @@ app.use((req, res, next) => {
+ // Human admin UI — connect/disconnect Gmail accounts. Protected by HTTP Basic Auth.
+ app.use('/admin', createAdminRouter());
+ 
++// Signed, expiring attachment downloads minted by get_attachment_link. The signature is the auth.
++app.use('/attachments', createAttachmentRouter());
++
+ // Google's redirect target after a user approves (or denies) Gmail access for one alias.
+ app.use('/oauth', createOAuthCallbackRouter());
+ 
+diff --git a/src/mcpServer.ts b/src/mcpServer.ts
+index eb654a8..8924eed 100644
+--- a/src/mcpServer.ts
++++ b/src/mcpServer.ts
+@@ -1,6 +1,7 @@
+ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+ import { z } from 'zod';
+ import { getAccountStore } from './accountStore.js';
++import { attachmentLink } from './attachmentLinks.js';
+ import {
+   AttachmentSelectionError,
+   createDraft,
+@@ -211,6 +212,73 @@ export function createMcpServer(): McpServer {
+     },
+   );
+ 
++  server.registerTool(
++    'get_attachment_link',
++    {
++      title: 'Get a download link for one email attachment',
++      description:
++        'Returns a signed HTTPS link that downloads one attachment, plus its filename, size and sha256, but not ' +
++        'the content. Use it to save files rather than get_attachment. Give the link to the user to click (it ' +
++        'lands in their Downloads folder), or fetch it with curl -fsSL -o <path> <download_url>. The link works ' +
++        'for one hour and needs no login, so treat it as a secret. Same selection and allowlist as get_attachment, ' +
++        'up to 25 MB.',
++      inputSchema: {
++        account: aliasSchema.describe('The alias of the connected Gmail account the message belongs to.'),
++        message_id: messageIdSchema.describe('The Gmail message ID, as returned by search_emails.'),
++        part_id: z
++          .string()
++          .regex(/^[0-9.]{1,50}$/, 'part_id looks like "1" or "0.1".')
++          .optional()
++          .describe('The partId of the attachment, from get_email.'),
++        filename: z
++          .string()
++          .min(1)
++          .max(255)
++          .optional()
++          .describe('Exact attachment filename. Used only when part_id is not given; must match exactly one attachment.'),
++      },
++      annotations: { readOnlyHint: true, openWorldHint: true },
++    },
++    async ({ account, message_id, part_id, filename }) => {
++      if (part_id === undefined && filename === undefined) {
++        return errorResult('Give part_id (from get_email) or filename.');
++      }
++      const record = await resolveAccount(account);
++      try {
++        const { data_base64: _, ...attachment } = await getAttachment(
++          record.refreshToken,
++          message_id,
++          { partId: part_id, filename },
++          25 * 1024 * 1024,
++        );
++        if (attachment.truncated) return errorResult(`Attachment is ${attachment.size} bytes, over the 25 MB limit.`);
++        const link = attachmentLink(record.alias, message_id, attachment.part_id, attachment.filename);
++        log.info('tool_get_attachment_link', {
++          account,
++          messageId: message_id,
++          partId: attachment.part_id,
++          size: attachment.size,
++          sha256: attachment.sha256,
++        });
++        return jsonResult({
++          account: record.alias,
++          ...attachment,
++          download_url: link.url,
++          expires_at: link.expires_at,
++        });
++      } catch (err) {
++        if (err instanceof GmailApiError && isReauthRequiredError(err)) {
++          return errorResult(reauthMessage(record));
++        }
++        if (err instanceof AttachmentSelectionError) {
++          return errorResult(err.message);
++        }
++        log.error('tool_get_attachment_link_failed', { account, message: (err as Error).message });
++        return errorResult(`Fetching attachment failed for account "${account}": ${(err as Error).message}`);
++      }
++    },
++  );
++
+   server.registerTool(
+     'search_all_accounts',
+     {

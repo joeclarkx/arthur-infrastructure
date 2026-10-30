@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Regression check for get_email(body) and get_attachment against real messages in
+# Regression check for get_email(body), get_attachment and get_attachment_link against real messages in
 # conni-personal. Prints metadata and PASS/FAIL only, never file contents. Run as root:
 #   ssh hetzner "bash /opt/arthur-infrastructure/deploy/multi-gmail-mcp/check-attachments.sh [dist-dir]"
 set -euo pipefail
@@ -52,6 +52,23 @@ try {
 } catch (err) {
   check(err instanceof AttachmentSelectionError, 'unknown part_id is rejected');
 }
+
+// get_attachment_link: tokens verify, tampering fails, and the live endpoint serves the same bytes.
+const { attachmentLink, verifyToken } = await import(`${dist}/attachmentLinks.js`);
+const ref = await getAttachment(refreshToken, '199cd4c7ef2383d2', { filename: 'BahnCard_Rechnung.pdf' }, MB);
+const link = attachmentLink('conni-personal', '199cd4c7ef2383d2', ref.part_id, ref.filename);
+const token = link.url.split('/attachments/')[1].split('/')[0];
+const [payload, sig] = token.split('.');
+const forged = Buffer.from(JSON.stringify({ a: 'conni-personal', m: 'x', p: '1', e: 9e9 })).toString('base64url');
+check(verifyToken(token)?.p === ref.part_id, 'attachment link token verifies');
+check(verifyToken(`${forged}.${sig}`) === undefined && verifyToken(`${payload}.x${sig.slice(1)}`) === undefined, 'tampered link tokens are rejected');
+const local = link.url.replace(process.env.PUBLIC_BASE_URL, `http://127.0.0.1:${process.env.PORT}`);
+const res = await fetch(local);
+const got = Buffer.from(await res.arrayBuffer());
+const { createHash } = await import('node:crypto');
+check(res.ok && createHash('sha256').update(got).digest('hex') === ref.sha256, `link download: ${res.status}, ${got.length} bytes, sha256 matches`);
+check(/^attachment;/.test(res.headers.get('content-disposition') ?? ''), 'link download is served as an attachment');
+check((await fetch(local.replace(`.${sig}`, `.x${sig.slice(1)}`))).status === 403, 'bad link signature returns 403');
 
 console.log(failed ? `${failed} FAILED` : 'ALL PASSED');
 process.exit(failed ? 1 : 0);

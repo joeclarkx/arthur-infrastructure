@@ -92,6 +92,7 @@ joeclark.photo. See Known Issues.
 - [ ] Run acceptance test with SKIP_SEND=1 (list, search both, draft), then restart and repeat to prove tokens persist
 - [ ] Back up `/var/lib/multi-gmail-mcp` after accounts are connected
 - [x] `get_attachment` tool and `get_email` body parameter (02-get-attachment.patch), verified on the three DB test mails
+- [ ] `get_attachment_link` (03-attachment-link.patch): signed 1-hour download links instead of save-to-disk. Deploy, run `check-attachments.sh`, then try the APT PDF (`161d25c446321943`) from claude.ai
 - [ ] Not done from the attachment handoff (optional): per-account switch to disable `send_email`/`create_draft`
 
 ### Phase 1: Deployment Readiness
