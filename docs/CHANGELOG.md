@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-11-04: apps.joeclark.photo static site
+
+New `deploy/apps-site/`: Apache vhost serving `/var/www/apps-joeclark-photo`, holding the home page
+and privacy policy for the Docs Quick Look Google OAuth app (macOS Quick Look extension in
+`~/repos/ql-gdocs`). Google won't enable "Publish app" (and so ends the 7-day refresh-token expiry)
+without them on a Search Console-verified domain; joeclark.photo is verified to joe.clark.x.
+
+- First placed on the server by hand over SSH, then brought under this repo and redeployed with
+  `deploy.sh` (same files, same vhost name `apps.joeclark.photo.conf`)
+- HTTP only until the `apps` A record exists; `deploy.sh` runs certbot once DNS points at Arthur
+- An earlier attempt on dave (the WordPress droplet) was fully rolled back
+
 ## 2026-10-30: Multi Gmail MCP allows application/ics
 
 Gmail labels many `.ics` files `application/ics`; `get_attachment` and `get_attachment_link`

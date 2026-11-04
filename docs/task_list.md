@@ -96,6 +96,13 @@ joeclark.photo. See Known Issues.
 - [ ] Try `get_attachment_link` from a fresh claude.ai chat (tool list refreshes per session; may need to toggle it on in the connector's tool settings)
 - [ ] Not done from the attachment handoff (optional): per-account switch to disable `send_email`/`create_draft`
 
+### apps.joeclark.photo static site (added 2026-11-04, deploy/apps-site/)
+- [x] Home page + privacy policy for the Docs Quick Look OAuth app (Google requires them to publish), vhost on Arthur
+- [ ] **Joe:** add A record `apps` -> 78.47.37.126 at Namecheap (the `*.joeclark.photo` wildcard points at dave, so the name doesn't reach Arthur yet)
+- [ ] Rerun `deploy/apps-site/deploy.sh` once DNS resolves, so certbot issues the cert and adds the HTTPS redirect
+- [ ] Google Auth Platform (project `docs-quick-look`): authorised domain joeclark.photo, home page https://apps.joeclark.photo/docs-quick-look/, privacy https://apps.joeclark.photo/docs-quick-look/privacy.html, then Publish app
+- [ ] Optional: reuse the site for the multi-gmail-mcp app's branding pages so it can be published too (see above)
+
 ### Phase 1: Deployment Readiness
 - [x] Verify setup.sh runs without errors (fixed npm peer-dep conflict with --legacy-peer-deps, fixed prisma migrate ordering)
 - [x] Test full install flow: git clone → setup.sh → service running
