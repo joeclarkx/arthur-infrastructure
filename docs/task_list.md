@@ -99,7 +99,7 @@ joeclark.photo. See Known Issues.
 ### apps.joeclark.photo static site (added 2026-11-04, deploy/apps-site/)
 - [x] Home page + privacy policy for the Docs Quick Look OAuth app (Google requires them to publish), vhost on Arthur
 - [x] A record `apps` -> 78.47.37.126 at Namecheap, added by Joe 2026-11-04 (overrides the `*.joeclark.photo` wildcard, which points at dave)
-- [ ] Rerun `deploy/apps-site/deploy.sh` once DNS resolves, so certbot issues the cert and adds the HTTPS redirect
+- [x] Cert issued by `deploy.sh` 2026-11-04 (expires 2027-02-02, auto-renews); HTTP redirects to HTTPS. Arthur's systemd-resolved cache had to be flushed first (`resolvectl flush-caches`), it held the old wildcard answer
 - [x] Google Auth Platform (project `docs-quick-look`): authorised domain joeclark.photo, home page + privacy URLs saved, app published (In production, unverified) 2026-11-04
 
 ### Phase 1: Deployment Readiness
