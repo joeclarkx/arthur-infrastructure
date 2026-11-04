@@ -101,7 +101,6 @@ joeclark.photo. See Known Issues.
 - [ ] **Joe:** add A record `apps` -> 78.47.37.126 at Namecheap (the `*.joeclark.photo` wildcard points at dave, so the name doesn't reach Arthur yet)
 - [ ] Rerun `deploy/apps-site/deploy.sh` once DNS resolves, so certbot issues the cert and adds the HTTPS redirect
 - [ ] Google Auth Platform (project `docs-quick-look`): authorised domain joeclark.photo, home page https://apps.joeclark.photo/docs-quick-look/, privacy https://apps.joeclark.photo/docs-quick-look/privacy.html, then Publish app
-- [ ] Optional: reuse the site for the multi-gmail-mcp app's branding pages so it can be published too (see above)
 
 ### Phase 1: Deployment Readiness
 - [x] Verify setup.sh runs without errors (fixed npm peer-dep conflict with --legacy-peer-deps, fixed prisma migrate ordering)
