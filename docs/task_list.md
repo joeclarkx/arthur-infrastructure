@@ -98,9 +98,9 @@ joeclark.photo. See Known Issues.
 
 ### apps.joeclark.photo static site (added 2026-11-04, deploy/apps-site/)
 - [x] Home page + privacy policy for the Docs Quick Look OAuth app (Google requires them to publish), vhost on Arthur
-- [ ] **Joe:** add A record `apps` -> 78.47.37.126 at Namecheap (the `*.joeclark.photo` wildcard points at dave, so the name doesn't reach Arthur yet)
+- [x] A record `apps` -> 78.47.37.126 at Namecheap, added by Joe 2026-11-04 (overrides the `*.joeclark.photo` wildcard, which points at dave)
 - [ ] Rerun `deploy/apps-site/deploy.sh` once DNS resolves, so certbot issues the cert and adds the HTTPS redirect
-- [ ] Google Auth Platform (project `docs-quick-look`): authorised domain joeclark.photo, home page https://apps.joeclark.photo/docs-quick-look/, privacy https://apps.joeclark.photo/docs-quick-look/privacy.html, then Publish app
+- [x] Google Auth Platform (project `docs-quick-look`): authorised domain joeclark.photo, home page + privacy URLs saved, app published (In production, unverified) 2026-11-04
 
 ### Phase 1: Deployment Readiness
 - [x] Verify setup.sh runs without errors (fixed npm peer-dep conflict with --legacy-peer-deps, fixed prisma migrate ordering)
