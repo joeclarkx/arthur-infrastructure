@@ -93,8 +93,8 @@ joeclark.photo. See Known Issues.
 - [ ] Back up `/var/lib/multi-gmail-mcp` after accounts are connected
 - [x] `get_attachment` tool and `get_email` body parameter (02-get-attachment.patch), verified on the three DB test mails
 - [x] `get_attachment_link` (03-attachment-link.patch): signed 1-hour download links instead of save-to-disk. Deployed 2026-10-30, checks passed, APT PDF downloaded via public URL
-- [ ] `04-unwrapped-body.patch`: body description tells Claude to write one line per paragraph. Claude was hard-wrapping drafts at ~72 chars, which showed as ragged, half-empty lines on narrow screens. Deployed 2026-11-06. Not enough on its own: text-only drafts open in Gmail's plain-text mode, which hard-wraps on send
-- [ ] `05-html-alternative.patch`: drafts carry an HTML part too, so Gmail opens them in rich-text mode. Next: open a fresh Claude draft in Gmail, check it is not in plain-text mode, send to self, check no wrapping
+- [x] `04-unwrapped-body.patch`: body description tells Claude to write one line per paragraph. Claude was hard-wrapping drafts at ~72 chars, which showed as ragged, half-empty lines on narrow screens. Deployed 2026-11-06. Not enough on its own: text-only drafts open in Gmail's plain-text mode, which hard-wraps on send
+- [x] `05-html-alternative.patch`: drafts carry an HTML part too, so Gmail opens them in rich-text mode. Verified 2026-11-06: test draft sent from Gmail, paragraph reflows with the window, no hard wraps, special characters shown literally
 - [ ] Try `get_attachment_link` from a fresh claude.ai chat (tool list refreshes per session; may need to toggle it on in the connector's tool settings)
 - [ ] Not done from the attachment handoff (optional): per-account switch to disable `send_email`/`create_draft`
 

@@ -7,7 +7,7 @@ lines at ~78 characters on send. New `05-html-alternative.patch` makes `create_d
 `send_email` build `multipart/alternative` (plain text plus escaped HTML, both base64), so Gmail
 opens drafts in rich-text mode. Verified: `check-attachments.sh` all passed; a test draft in
 joe-personal reads back with both parts, long paragraph unbroken, `<b>` and `&` escaped in the
-HTML. Still to check by hand: open a draft in Gmail, send to self, confirm no wrapping.
+HTML. Sent from Gmail by hand: the paragraph reflows with the window, no hard wraps.
 
 ## 2026-11-06: Multi Gmail MCP stops hard-wrapped drafts
 
