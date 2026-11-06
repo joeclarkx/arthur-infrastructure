@@ -56,8 +56,13 @@ Patches in `deploy/multi-gmail-mcp/`, applied in number order by `deploy.sh`:
   - Not done from the save_attachment handoff: named save roots, `save_all_attachments`,
     `list_save_roots`. The server runs on Arthur, so its disk is not the Mac's;
     direct-to-Drive saving would need a sync folder (Syncthing) or the Drive API.
+- `04-unwrapped-body.patch`: the `body` description for `create_draft` and
+  `send_email` tells Claude to write each paragraph as one line and not to wrap at a
+  fixed width. Claude was breaking lines at about 72 characters, which shows as
+  ragged, half-empty lines on narrow screens. Instruction only; the body is still sent
+  as given.
 
-All three are small enough to offer upstream. After an upstream update, rerun the
+All four are small enough to offer upstream. After an upstream update, rerun the
 attachment check (it reads three Deutsche Bahn mails in `conni-personal`, downloads one
 through a link, and prints metadata only):
 

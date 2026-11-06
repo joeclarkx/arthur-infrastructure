@@ -1,0 +1,20 @@
+--- a/src/mcpServer.ts
++++ b/src/mcpServer.ts
+@@ -60,7 +60,16 @@
+   .max(2_000)
+   .describe('One or more comma-separated recipient email addresses.');
+ const subjectSchema = z.string().max(998).default('').describe('Message subject.');
+-const bodySchema = z.string().min(1).max(100_000).describe('Plain-text message body.');
++const bodySchema = z
++  .string()
++  .min(1)
++  .max(100_000)
++  .describe(
++    'Plain-text message body. Write each paragraph as one unbroken line and separate paragraphs with a ' +
++      'blank line. Never insert line breaks to wrap text at a fixed width: the mail client wraps it, and ' +
++      'manual breaks show up as ragged, half-empty lines on narrow screens. Use single line breaks only ' +
++      'where a new line is meant (list items, sign-off, address).',
++  );
+ 
+ function writeFailure(operation: string, account: AccountRecord, err: unknown) {
+   if (err instanceof GmailApiError && isReauthRequiredError(err)) {
