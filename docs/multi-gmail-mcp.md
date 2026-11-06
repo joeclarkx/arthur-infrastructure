@@ -61,8 +61,13 @@ Patches in `deploy/multi-gmail-mcp/`, applied in number order by `deploy.sh`:
   fixed width. Claude was breaking lines at about 72 characters, which shows as
   ragged, half-empty lines on narrow screens. Instruction only; the body is still sent
   as given.
+- `05-html-alternative.patch`: drafts and sent mail are `multipart/alternative`, the
+  plain text plus an HTML copy (escaped, one `<div>` per line, as Gmail writes its
+  own). A text-only draft opens in Gmail's plain-text mode, which hard-wraps lines at
+  ~78 characters on send; with an HTML part it opens in rich-text mode and doesn't.
+  Both parts are base64, so long paragraphs never break the 998-character line limit.
 
-All four are small enough to offer upstream. After an upstream update, rerun the
+All five are small enough to offer upstream. After an upstream update, rerun the
 attachment check (it reads three Deutsche Bahn mails in `conni-personal`, downloads one
 through a link, and prints metadata only):
 

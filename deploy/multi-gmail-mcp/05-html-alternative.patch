@@ -1,0 +1,47 @@
+diff --git a/src/gmail.ts b/src/gmail.ts
+index 167f033..d86d0c3 100644
+--- a/src/gmail.ts
++++ b/src/gmail.ts
+@@ -1,6 +1,7 @@
+-import { createHash } from 'node:crypto';
++import { createHash, randomBytes } from 'node:crypto';
+ import type { OAuth2Client } from 'google-auth-library';
+ import { clientForRefreshToken } from './googleOAuth.js';
++import { escapeHtml } from './html.js';
+ 
+ const GMAIL_BASE = 'https://gmail.googleapis.com/gmail/v1/users/me';
+ 
+@@ -389,17 +390,29 @@ function buildRawMessage(input: ComposeMessageInput, requireRecipient: boolean):
+   const cc = normalizeRecipients(input.cc, 'cc', false);
+   const bcc = normalizeRecipients(input.bcc, 'bcc', false);
+   const subject = encodeSubject(input.subject ?? '');
+-  const body = input.body.replace(/\r\n?|\n/g, '\r\n');
++  const lines = input.body.split(/\r\n?|\n/);
++  // Text-only drafts open in Gmail's plain-text mode, which hard-wraps lines at ~78 characters
++  // on send. An HTML alternative makes Gmail open the draft in rich-text mode instead.
++  const html = `<div dir="ltr">${lines.map((l) => (l ? `<div>${escapeHtml(l)}</div>` : '<div><br></div>')).join('')}</div>`;
++  const boundary = `alt_${randomBytes(12).toString('hex')}`;
++  const part = (type: string, content: string) =>
++    [
++      `--${boundary}`,
++      `Content-Type: ${type}; charset="UTF-8"`,
++      'Content-Transfer-Encoding: base64',
++      '',
++      ...(Buffer.from(content, 'utf8').toString('base64').match(/.{1,76}/g) ?? []),
++    ].join('\r\n');
+   const headers = [
+     ...(to ? [`To: ${to}`] : []),
+     ...(cc ? [`Cc: ${cc}`] : []),
+     ...(bcc ? [`Bcc: ${bcc}`] : []),
+     `Subject: ${subject}`,
+     'MIME-Version: 1.0',
+-    'Content-Type: text/plain; charset="UTF-8"',
+-    'Content-Transfer-Encoding: 8bit',
++    `Content-Type: multipart/alternative; boundary="${boundary}"`,
+   ];
+-  return Buffer.from(`${headers.join('\r\n')}\r\n\r\n${body}`, 'utf8').toString('base64url');
++  const mime = [headers.join('\r\n'), '', part('text/plain', lines.join('\r\n')), part('text/html', html), `--${boundary}--`, ''];
++  return Buffer.from(mime.join('\r\n'), 'utf8').toString('base64url');
+ }
+ 
+ export async function sendMessage(refreshToken: string, input: ComposeMessageInput): Promise<GmailWriteResult> {
