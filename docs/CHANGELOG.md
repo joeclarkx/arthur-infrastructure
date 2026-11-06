@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-06: Multi Gmail MCP stops hard-wrapped drafts
+
+Drafts from Claude had line breaks at about 72 characters, which show as ragged, half-empty lines
+on narrow screens. The server never wrapped anything; Claude put the breaks in the body.
+New `04-unwrapped-body.patch` changes the `body` description for `create_draft` and `send_email`
+to ask for one line per paragraph. Deployed: service active, patched description in `dist`,
+public URL returns 200. Still to check: a fresh draft from a new claude.ai chat.
+
 ## 2026-11-04: apps.joeclark.photo static site
 
 New `deploy/apps-site/`: Apache vhost serving `/var/www/apps-joeclark-photo`, holding the home page
