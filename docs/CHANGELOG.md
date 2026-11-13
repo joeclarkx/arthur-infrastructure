@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-11-13: Umami v2.20.2 -> v3.5.0
+
+Major upgrade, live on https://umami.joeclark.photo. `scripts/setup.sh` now does the whole upgrade
+(re-runnable): pre-migration `pg_dump` to `/root/umami-backups/`, checks out the newest `v3.*` tag,
+builds with pnpm 12.3.4, applies migrations (through `27_add_error_tracking`), sets `MCP_ENABLED=1`.
+
+- **Own Node 22.23.5** in `/opt/node-umami` (checksum-verified). v3 needs Node >= 20.19; Arthur's apt
+  Node 18 is shared with multi-gmail-mcp and pm2, so it was left alone. `umami.service` uses the new Node.
+- **2G `/swapfile`** added (in fstab). The first v3 build was OOM-killed at ~2.5GB with no swap. Other
+  services (multi-gmail-mcp, crm-api) stayed up throughout.
+- Three script fixes found on the way: forced tag checkout (build leaves `next-env.d.ts` modified),
+  pnpm instead of npm (v3 is a pnpm workspace), swap.
+- Checked: service active, `/api/heartbeat` ok, `script.js` and `/login` 200, `/mcp` 401 without a key
+  (enabled), synthetic pageview to `/api/send` accepted and written (then deleted). 1052 events kept.
+- Umami was serving the old v2 process until the restart; downtime was the restart only.
+
 ## 2026-11-06: Multi Gmail MCP drafts get an HTML alternative
 
 Patch 04 was not enough: a text-only draft opens in Gmail's plain-text mode, which hard-wraps

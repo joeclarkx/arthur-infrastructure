@@ -22,6 +22,7 @@ joeclark.photo. See Known Issues.
 ✅ Copy Umami scripts from lead-pipeline
 ✅ Config templates (.env.example, Apache vhost)
 ✅ .gitignore for credentials and builds
+✅ Upgraded Umami to v3.5.0 on 2026-11-13 (see CHANGELOG)
 ✅ Deployed self-hosted Umami v2.20.2 to Arthur (Postgres 16, systemd, Apache reverse proxy, Let's Encrypt)
 ✅ DNS: `umami.joeclark.photo` A record added by Joe, pointing to 78.47.37.126
 ✅ Verified full install flow end-to-end on the real box; fixed drift between setup.sh/docs (port, secret env var names) found in the process
@@ -29,6 +30,9 @@ joeclark.photo. See Known Issues.
 ## To Do
 
 ### Immediate (post-install)
+- [ ] Umami MCP: create an API key (Settings -> API keys), then register `https://umami.joeclark.photo/mcp` in Claude Code with header `Authorization: Bearer umami_<key>`. `/mcp` is enabled on the server (401 without a key)
+- [ ] v3.5.0 notes the seeded admin password must be changed (Settings -> Security); confirm it is not still `umami`
+- [ ] Check a real visit lands in `website_event` after the upgrade (tracker script unchanged, so expected fine)
 - [ ] Log into https://umami.joeclark.photo (admin/umami) and change the default password immediately
 - [ ] Add joeclark.photo and the CRM frontend as tracked websites in the Umami UI, grab new tracking scripts, deploy them
 - [ ] Cancel/downgrade Umami Cloud subscription once tracking is confirmed working on the new sites
@@ -126,7 +130,7 @@ joeclark.photo. See Known Issues.
 ### Phase 4: Documentation Updates
 - [ ] Troubleshooting guide for common issues
 - [ ] Runbook for incident response
-- [ ] Upgrade procedure for Umami updates
+- [x] Upgrade procedure for Umami updates (docs/umami-deployment.md, re-run scripts/setup.sh)
 - [ ] Data retention & archival policy
 
 ### Known Issues
