@@ -123,12 +123,16 @@ SELECT COUNT(*) FROM websites;
 
 Check for new releases: https://github.com/umami-software/umami/releases
 
-To upgrade:
+To upgrade, re-run the idempotent setup script (it dumps the DB to `/root/umami-backups/`, fetches
+tags, checks out the newest `v3.*`, runs migrations and rebuilds), then restart:
 ```bash
-ssh hetzner "cd /opt/umami && git fetch && git checkout v2.X.X"
-ssh hetzner "cd /opt/umami && npm install && npm run build"
+ssh hetzner "bash -s" < scripts/setup.sh
 ssh hetzner "systemctl restart umami"
 ```
+Umami v3 runs on its own Node 22 in `/opt/node-umami` (apt Node 18 is shared with other services and
+is left alone). `APP_SECRET` must be set in `.env`. `MCP_ENABLED=1` turns on the read-only `/mcp`
+endpoint; create an API key in Umami under Settings → API keys and send it as
+`Authorization: Bearer umami_<key>`.
 
 Then verify: `https://umami.joeclark.photo`
 

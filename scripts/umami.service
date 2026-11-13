@@ -10,7 +10,8 @@ After=network.target postgresql.service
 Type=simple
 WorkingDirectory=/opt/umami
 EnvironmentFile=/opt/umami/.env
-ExecStart=/usr/bin/npm run start
+Environment=PATH=/opt/node-umami/bin:/usr/bin:/bin
+ExecStart=/opt/node-umami/bin/npm run start
 Restart=on-failure
 RestartSec=5
 User=umami
