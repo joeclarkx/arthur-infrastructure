@@ -64,7 +64,8 @@ fi
 GIT="git -c safe.directory=${UMAMI_DIR}"
 $GIT fetch --tags
 LATEST_TAG=$($GIT tag -l 'v3.*' | sort -V | tail -1)
-$GIT checkout "$LATEST_TAG"
+# -f: earlier builds/npm installs leave tracked files (next-env.d.ts, lockfile) modified.
+$GIT checkout -f "$LATEST_TAG"
 
 if [ ! -f .env ]; then
     if [ -n "$DB_PASSWORD_GENERATED" ]; then
