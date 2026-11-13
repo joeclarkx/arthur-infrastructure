@@ -35,6 +35,9 @@ if [ ! -x "$NODE_DIR/bin/node" ] || [ "$("$NODE_DIR/bin/node" -v)" != "$NODE_VER
     rm -rf "$tmp"
 fi
 export PATH="$NODE_DIR/bin:$PATH"
+# v3 is a pnpm workspace; engines in its package.json pins the version.
+PNPM_VERSION=12.3.4
+[ "$(pnpm -v 2>/dev/null)" = "$PNPM_VERSION" ] || npm install -g "pnpm@${PNPM_VERSION}"
 
 if ! id umami >/dev/null 2>&1; then
     useradd --system --home "$UMAMI_DIR" --shell /usr/sbin/nologin umami
@@ -97,9 +100,10 @@ else
     echo "IGNORE_IP=${IGNORE_IP}" >> .env
 fi
 
-npm install --legacy-peer-deps
-npx prisma migrate deploy
-npm run build
+pnpm install --frozen-lockfile
+# The build runs `prisma migrate deploy` (check:db), so it needs DATABASE_URL.
+set -a; . ./.env; set +a
+pnpm run build
 
 chown -R umami:umami "$UMAMI_DIR"
 
