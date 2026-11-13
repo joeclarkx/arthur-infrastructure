@@ -20,6 +20,13 @@ NODE_VERSION=v22.23.5
 NODE_SHA256=cdeb8670a0c81f51b4dc4ac61919f9b1ad917b304bf8221eb939570663d240f8
 NODE_DIR=/opt/node-umami
 
+# The v3 Next.js build peaks above 2.5GB; with no swap the OOM killer ends it.
+if ! swapon --show | grep -q /swapfile; then
+    [ -f /swapfile ] || { fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile; }
+    swapon /swapfile
+    grep -q '^/swapfile' /etc/fstab || echo '/swapfile none swap sw 0 0' >> /etc/fstab
+fi
+
 if ! command -v psql >/dev/null 2>&1; then
     echo "Postgres not found. Installing..."
     apt-get update
