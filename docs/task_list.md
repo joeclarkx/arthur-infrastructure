@@ -237,3 +237,7 @@ joeclark.photo. See Known Issues.
 - Centralized logging (ELK or similar)
 - CDN for static assets
 - Database replication for high availability
+
+## corneliabaltes.com tracking (checked 2026-11-16)
+- Arthur side healthy: umami active, `umami.corneliabaltes.com` proxy resolves to Arthur and serves `script.js` (200), cert valid to 2026-12-31.
+- [ ] **Tracking dead since 2026-11-14.** The WPFC cached homepage (built "November 14, 2026 @ 12:13 pm") has the Umami `<script>` inside an HTML comment. The uncached render (`/?cb=<n>`) has it live. Fix: clear the WP Fastest Cache on corneliabaltes.com. Same cache-lag trap as joeclark.photo (see above).
